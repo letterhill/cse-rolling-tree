@@ -1,0 +1,775 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,300;0,400;0,600;0,700;1,400&family=Nanum+Myeongjo:wght@400;700&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#07090f;--s1:#0c1020;--s2:#111829;
+  --g:#39ff8f;--g2:#22cc6a;
+  --c:#00cfff;--p:#9d7fff;--a:#ffbb00;--r:#ff4d6a;
+  --tx:#dce8f5;--mu:#3d5270;--bd:#162035;
+  --mono:'JetBrains Mono',monospace;--serif:'Nanum Myeongjo',serif;
+}
+body{background:var(--bg);color:var(--tx);font-family:var(--mono);min-height:600px;overflow-x:hidden}
+.page{display:none;min-height:580px}
+.page.active{display:block}
+#home.active{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:580px;padding:32px 20px}
+
+.nav{display:flex;align-items:center;justify-content:space-between;background:rgba(7,9,15,.94);backdrop-filter:blur(10px);border-bottom:1px solid var(--bd);padding:9px 16px;position:sticky;top:0;z-index:100}
+.nav-logo{font-size:12px;font-weight:700;color:var(--g);cursor:pointer;letter-spacing:.04em;user-select:none}
+.nav-logo span{color:var(--mu);font-weight:400}
+.nav-main{display:flex;gap:4px}
+.nb{padding:5px 12px;background:transparent;border:1px solid transparent;border-radius:6px;color:var(--mu);font-family:var(--mono);font-size:10px;cursor:pointer;transition:.2s;letter-spacing:.04em}
+.nb:hover{color:var(--tx);border-color:var(--bd)}
+.nb.on{color:var(--g);border-color:rgba(57,255,143,.18);background:rgba(57,255,143,.04)}
+.nb-admin{font-size:8px;color:rgba(61,82,112,.35);border-color:transparent;padding:4px 7px}
+.nb-admin:hover{color:rgba(157,127,255,.45);border-color:rgba(157,127,255,.1)}
+.nb-admin.on{color:rgba(157,127,255,.6);border-color:rgba(157,127,255,.2);background:rgba(157,127,255,.04)}
+
+.lock-banner{background:rgba(255,187,0,.06);border-bottom:1px solid rgba(255,187,0,.2);padding:7px 16px;display:flex;align-items:center;gap:8px;font-size:10px;color:var(--a)}
+.lock-banner.hidden{display:none}
+.lock-dot{width:6px;height:6px;border-radius:50%;background:var(--a);animation:blk 1.4s infinite}
+
+.grid-bg{position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,transparent,transparent 47px,rgba(57,255,143,.025) 47px,rgba(57,255,143,.025) 48px),repeating-linear-gradient(90deg,transparent,transparent 47px,rgba(57,255,143,.025) 47px,rgba(57,255,143,.025) 48px)}
+#home{position:relative;overflow:hidden;text-align:center}
+.badge{display:inline-flex;align-items:center;gap:7px;background:rgba(57,255,143,.06);border:1px solid rgba(57,255,143,.18);border-radius:20px;padding:5px 14px;font-size:9px;color:var(--g);letter-spacing:.14em;text-transform:uppercase;margin-bottom:26px}
+.bdot{width:5px;height:5px;border-radius:50%;background:var(--g);animation:blk 1.4s infinite}
+.htitle{font-size:24px;font-weight:700;line-height:1.25;background:linear-gradient(135deg,var(--c),var(--g) 45%,var(--p));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:10px}
+.htagline{font-size:12px;color:var(--tx);margin-bottom:32px;font-family:var(--serif);line-height:1.7}
+.hsub{color:var(--mu);font-size:11px;line-height:1.9;margin-bottom:10px}
+.hsub em{color:var(--g);font-style:normal}
+.hcards{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%;max-width:460px;margin-bottom:24px}
+.hcard{background:var(--s1);border:1px solid var(--bd);border-radius:12px;padding:16px 14px;text-align:left;cursor:pointer;transition:.22s;position:relative;overflow:hidden}
+.hcard::after{content:'';position:absolute;inset:0;opacity:0;transition:.22s}
+.hcard:hover{transform:translateY(-2px)}
+.hcard.write:hover{border-color:var(--g)}.hcard.write::after{background:linear-gradient(135deg,rgba(57,255,143,.04),transparent)}
+.hcard.tree:hover{border-color:var(--c)}.hcard.tree::after{background:linear-gradient(135deg,rgba(0,207,255,.04),transparent)}
+.hcard.write:hover::after,.hcard.tree:hover::after{opacity:1}
+.ctag{position:absolute;top:9px;right:9px;font-size:8px;color:var(--mu);letter-spacing:.05em;opacity:.5}
+.cico{font-size:20px;margin-bottom:9px}
+.cttl{font-size:12px;font-weight:700;margin-bottom:3px}
+.cdsc{font-size:10px;color:var(--mu);line-height:1.5}
+.hfoot{font-size:9px;color:var(--mu);opacity:.45}
+
+/* WRITE */
+#write-page{background:var(--bg);padding:14px}
+.winr{max-width:580px;margin:0 auto}
+.locked-msg{display:none;flex-direction:column;align-items:center;text-align:center;padding:60px 24px}
+.locked-msg.show{display:flex}
+.thdr{background:var(--s1);border:1px solid var(--bd);border-radius:11px 11px 0 0;padding:9px 14px;display:flex;align-items:center;gap:7px}
+.td{width:10px;height:10px;border-radius:50%}.td.r{background:#ff5f57}.td.y{background:#febc2e}.td.g{background:#28c840}
+.ttl{font-size:9px;color:var(--mu);margin-left:auto;letter-spacing:.05em}
+.tbody{background:var(--s1);border:1px solid var(--bd);border-top:none;border-radius:0 0 11px 11px;padding:16px;margin-bottom:12px}
+.pline{display:flex;gap:8px;margin-bottom:14px;font-size:11px;align-items:flex-start}
+.ps{color:var(--g);flex-shrink:0}.pt{color:var(--mu);font-size:10px}
+.slbl{font-size:9px;color:var(--mu);letter-spacing:.14em;text-transform:uppercase;margin-bottom:9px;display:flex;align-items:center;gap:8px}
+.slbl::after{content:'';flex:1;height:1px;background:var(--bd)}
+.ssec{margin-bottom:16px}
+.pscroll{display:grid;grid-template-columns:1fr 1fr;gap:5px;max-height:260px;overflow-y:auto;padding-right:2px}
+.pscroll::-webkit-scrollbar{width:3px}.pscroll::-webkit-scrollbar-thumb{background:var(--bd)}
+
+/* ★ 핵심 수정: 교수님 버튼 */
+.pbtn{
+  background:transparent;
+  border:1px solid var(--bd);
+  border-radius:8px;
+  padding:10px 12px;
+  text-align:left;
+  cursor:pointer;
+  color:#ffffff;          /* 기본: 흰색 텍스트 */
+  font-family:var(--mono);
+  font-size:10px;
+  transition:background .18s, border-color .18s, color .18s;
+  display:flex;
+  align-items:flex-start;
+  gap:8px;
+  width:100%;
+}
+.pbtn:hover{
+  border-color:var(--c);
+  background:#ffffff;     /* 호버: 흰 배경 */
+  color:#111111;          /* 호버: 검정 텍스트 */
+}
+.pbtn:hover .psubs{
+  color:#555555;          /* 호버: 과목명도 진한 회색 */
+}
+.pbtn:hover .pico{
+  filter:none;
+}
+.pbtn.sel{
+  border-color:var(--g);
+  background:rgba(57,255,143,.08);
+  color:var(--g);
+}
+.pbtn.sel:hover{
+  background:rgba(57,255,143,.18);
+  color:var(--g);
+}
+.pbtn.sel:hover .psubs{color:var(--g2)}
+
+.pico{font-size:16px;flex-shrink:0;margin-top:2px}
+.pnm{
+  font-weight:700;
+  font-size:14px;   /* ★ 교수님 성함 크게 */
+  line-height:1.3;
+}
+.psubs{
+  font-size:9px;
+  color:#8899aa;    /* 기본: 기존 muted보다 약간 밝게 */
+  margin-top:3px;
+  line-height:1.4;
+  transition:color .18s;
+}
+.pbtn.sel .psubs{color:var(--g2)}
+
+.frow{margin-bottom:11px}
+.flbl{display:block;font-size:8px;color:var(--mu);letter-spacing:.12em;text-transform:uppercase;margin-bottom:4px}
+.finp{width:100%;background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:8px 12px;color:var(--tx);font-family:var(--mono);font-size:11px;outline:none;transition:.2s}
+.finp:focus{border-color:var(--g)}
+textarea.finp{min-height:100px;resize:vertical;line-height:1.6}
+.charc{font-size:8px;color:var(--mu);text-align:right;margin-top:3px}
+.togrow{display:flex;align-items:center;justify-content:space-between;background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:8px 12px;margin-bottom:11px}
+.toglbl{font-size:10px}.togsub{font-size:8px;color:var(--mu);margin-top:2px}
+.togsw{width:32px;height:18px;background:var(--bd);border-radius:9px;cursor:pointer;transition:.2s;position:relative;border:none;flex-shrink:0}
+.togsw.on{background:var(--g)}.togsw::after{content:'';position:absolute;top:3px;left:3px;width:12px;height:12px;border-radius:50%;background:#fff;transition:.2s}
+.togsw.on::after{transform:translateX(14px)}
+.subbtn{width:100%;padding:12px;border:none;border-radius:9px;background:linear-gradient(135deg,var(--g),var(--c));color:#050a0f;font-family:var(--mono);font-size:12px;font-weight:700;cursor:pointer;transition:.2s;letter-spacing:.04em}
+.subbtn:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(57,255,143,.22)}
+.sucscr{display:none;flex-direction:column;align-items:center;text-align:center;padding:48px 24px}
+.sucscr.show{display:flex}
+.sucico{font-size:42px;margin-bottom:12px;animation:pop .4s cubic-bezier(.175,.885,.32,1.275)}
+.sucttl{font-size:18px;font-weight:700;color:var(--g);margin-bottom:7px}
+.sucsub{font-size:11px;color:var(--mu);line-height:1.8;margin-bottom:20px}
+.bkbtn{padding:8px 20px;background:transparent;border:1px solid var(--g);border-radius:8px;color:var(--g);font-family:var(--mono);font-size:11px;cursor:pointer;transition:.2s}
+.bkbtn:hover{background:rgba(57,255,143,.07)}
+
+/* TREE */
+#tree-page{background:var(--bg);padding:12px}
+.trhdr{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--bd);gap:10px}
+.trttl{font-size:13px;font-weight:700;color:var(--c)}
+.trsub{font-size:9px;color:var(--mu);margin-top:2px;line-height:1.6}
+.trstat{text-align:right;font-size:9px;color:var(--mu);line-height:1.8}
+.trstat em{color:var(--g);font-style:normal;font-weight:700}
+.chips{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:12px}
+.chip{padding:3px 10px;background:transparent;border:1px solid var(--bd);border-radius:14px;color:var(--mu);font-family:var(--mono);font-size:8px;cursor:pointer;transition:.2s}
+.chip:hover{border-color:var(--c);color:var(--c)}
+.chip.on{border-color:var(--g);color:var(--g);background:rgba(57,255,143,.06)}
+.trwrap{overflow-x:auto}
+.trwrap::-webkit-scrollbar{height:3px}.trwrap::-webkit-scrollbar-thumb{background:var(--bd)}
+.trfoot{font-size:8px;color:var(--mu);text-align:center;margin-top:12px;opacity:.5}
+
+/* MODAL */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:200;align-items:center;justify-content:center;padding:14px}
+.overlay.show{display:flex}
+.modal{background:var(--s1);border:1px solid var(--g);border-radius:14px;padding:22px;max-width:460px;width:100%;max-height:80vh;overflow-y:auto;position:relative;box-shadow:0 0 60px rgba(57,255,143,.1)}
+.mcl{position:absolute;top:11px;right:12px;background:transparent;border:none;color:var(--mu);cursor:pointer;font-size:16px;font-family:var(--mono);transition:.2s}
+.mcl:hover{color:var(--tx)}
+.mmeta{font-size:8px;color:var(--g);letter-spacing:.12em;text-transform:uppercase;margin-bottom:4px;opacity:.7}
+.mfrom{font-size:11px;color:var(--mu);margin-bottom:12px}
+.mfrom strong{color:var(--tx)}
+.mbody{font-size:12px;line-height:1.9;color:var(--tx);border-left:2px solid var(--g);padding-left:12px;white-space:pre-wrap;font-family:var(--serif)}
+.mdate{font-size:8px;color:var(--mu);margin-top:12px;text-align:right}
+
+/* ADMIN */
+#admin-page{background:var(--bg);padding:16px}
+.alog{max-width:340px;margin:50px auto;background:var(--s1);border:1px solid var(--bd);border-radius:13px;padding:28px;text-align:center}
+.alock{font-size:34px;margin-bottom:12px}
+.alog h2{font-size:15px;color:var(--p);margin-bottom:5px}
+.alog p{font-size:9px;color:var(--mu);margin-bottom:20px}
+.pwinp{width:100%;background:var(--bg);border:1px solid var(--bd);border-radius:7px;padding:10px 12px;color:var(--tx);font-family:var(--mono);font-size:13px;text-align:center;letter-spacing:.3em;outline:none;margin-bottom:9px;transition:.2s}
+.pwinp:focus{border-color:var(--p)}
+.pwbtn{width:100%;padding:10px;background:var(--p);border:none;border-radius:7px;color:#fff;font-family:var(--mono);font-size:10px;font-weight:700;cursor:pointer;transition:.2s}
+.pwbtn:hover{background:#b899ff}
+.pwerr{font-size:9px;color:var(--r);margin-top:6px;display:none}
+.adash{display:none}
+.atop{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:8px;flex-wrap:wrap}
+.ah{font-size:14px;font-weight:700;color:var(--p)}
+.atop-right{display:flex;gap:6px;flex-wrap:wrap}
+.lobtn{background:transparent;border:1px solid var(--bd);border-radius:5px;padding:4px 10px;color:var(--mu);font-family:var(--mono);font-size:9px;cursor:pointer;transition:.2s}
+.lobtn:hover{border-color:var(--r);color:var(--r)}
+.deploy-btn{padding:5px 12px;background:rgba(255,187,0,.08);border:1px solid rgba(255,187,0,.35);border-radius:6px;color:var(--a);font-family:var(--mono);font-size:9px;cursor:pointer;transition:.2s;font-weight:700}
+.deploy-btn:hover{background:rgba(255,187,0,.14)}
+.deploy-btn.locked{background:rgba(255,77,106,.06);border-color:rgba(255,77,106,.3);color:var(--r)}
+.qrbtn{padding:5px 12px;background:rgba(0,207,255,.06);border:1px solid rgba(0,207,255,.25);border-radius:6px;color:var(--c);font-family:var(--mono);font-size:9px;cursor:pointer;transition:.2s}
+.qrbtn:hover{background:rgba(0,207,255,.12)}
+.astats{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:14px}
+.sc{background:var(--s2);border:1px solid var(--bd);border-radius:9px;padding:11px;text-align:center}
+.sn{font-size:20px;font-weight:700;color:var(--p)}
+.sl{font-size:8px;color:var(--mu);margin-top:2px;letter-spacing:.07em}
+.frow2{display:flex;gap:5px;margin-bottom:12px;flex-wrap:wrap}
+.fb{padding:4px 11px;background:transparent;border:1px solid var(--bd);border-radius:14px;color:var(--mu);font-family:var(--mono);font-size:8px;cursor:pointer;transition:.2s}
+.fb.on{border-color:var(--p);color:var(--p);background:rgba(157,127,255,.07)}
+.lc{background:var(--s1);border:1px solid var(--bd);border-radius:9px;padding:11px 13px;margin-bottom:5px;transition:.2s}
+.lc-top{display:flex;align-items:flex-start;justify-content:space-between;gap:7px;margin-bottom:5px}
+.lcp{font-size:9px;font-weight:700;color:var(--c)}
+.lcf{font-size:8px;color:var(--mu)}
+.lcd{font-size:8px;color:var(--mu);flex-shrink:0}
+.lcprev{font-size:10px;color:var(--tx);line-height:1.5;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.lcanon{display:inline-flex;align-items:center;gap:3px;margin-top:4px;font-size:7px;color:var(--a);letter-spacing:.08em;text-transform:uppercase}
+.lc-actions{display:flex;gap:5px;margin-top:7px}
+.lc-view{flex:1;padding:5px 10px;background:transparent;border:1px solid var(--bd);border-radius:5px;color:var(--mu);font-family:var(--mono);font-size:8px;cursor:pointer;transition:.2s}
+.lc-view:hover{border-color:var(--p);color:var(--p)}
+.lc-del{padding:5px 10px;background:transparent;border:1px solid rgba(255,77,106,.25);border-radius:5px;color:rgba(255,77,106,.6);font-family:var(--mono);font-size:8px;cursor:pointer;transition:.2s}
+.lc-del:hover{border-color:var(--r);color:var(--r);background:rgba(255,77,106,.06)}
+
+.qroverlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:300;align-items:center;justify-content:center;padding:14px}
+.qroverlay.show{display:flex}
+.qrmodal{background:var(--s1);border:1px solid var(--c);border-radius:14px;padding:22px;max-width:520px;width:100%;max-height:85vh;overflow-y:auto}
+.qrtop{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.qrh{font-size:13px;font-weight:700;color:var(--c)}
+.qrcl{background:transparent;border:none;color:var(--mu);cursor:pointer;font-size:15px;font-family:var(--mono)}
+.qrcl:hover{color:var(--tx)}
+.qr-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.qr-card{background:var(--bg);border:1px solid var(--bd);border-radius:10px;padding:14px;text-align:center}
+.qr-pname{font-size:11px;font-weight:700;color:var(--tx);margin-bottom:3px}
+.qr-subs{font-size:8px;color:var(--mu);margin-bottom:10px;line-height:1.4}
+.qr-img{width:100px;height:100px;margin:0 auto 10px;border:1px solid var(--bd);border-radius:6px;background:white;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.qr-img canvas{width:100px!important;height:100px!important}
+.qr-url{font-size:7px;color:var(--mu);word-break:break-all;line-height:1.4;margin-bottom:8px}
+.qr-printall{width:100%;margin-top:10px;padding:9px;background:transparent;border:1px solid var(--c);border-radius:8px;color:var(--c);font-family:var(--mono);font-size:10px;cursor:pointer;transition:.2s}
+.qr-printall:hover{background:rgba(0,207,255,.07)}
+
+.delconf{display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:400;align-items:center;justify-content:center;padding:14px}
+.delconf.show{display:flex}
+.delbox{background:var(--s1);border:1px solid rgba(255,77,106,.4);border-radius:12px;padding:24px;max-width:360px;width:100%;text-align:center}
+.delico{font-size:32px;margin-bottom:12px}
+.delh{font-size:14px;font-weight:700;color:var(--r);margin-bottom:7px}
+.delp{font-size:10px;color:var(--mu);line-height:1.6;margin-bottom:20px}
+.del-btns{display:flex;gap:8px}
+.del-cancel{flex:1;padding:9px;background:transparent;border:1px solid var(--bd);border-radius:7px;color:var(--mu);font-family:var(--mono);font-size:10px;cursor:pointer;transition:.2s}
+.del-cancel:hover{border-color:var(--tx);color:var(--tx)}
+.del-ok{flex:1;padding:9px;background:rgba(255,77,106,.1);border:1px solid var(--r);border-radius:7px;color:var(--r);font-family:var(--mono);font-size:10px;font-weight:700;cursor:pointer;transition:.2s}
+.del-ok:hover{background:rgba(255,77,106,.18)}
+
+@keyframes blk{0%,100%{opacity:1}50%{opacity:.2}}
+@keyframes pop{0%{transform:scale(0)}60%{transform:scale(1.1)}100%{transform:scale(1)}}
+
+    /* 교수님 모드 전용 스타일 */
+    .prof-only-text {
+        display: none;
+    }
+    /* 평소엔 숨김 */
+
+    body.is-prof-mode .nav-bar {
+        display: none !important;
+    }
+    /* 하단바 제거 */
+    body.is-prof-mode .student-only {
+        display: none !important;
+    }
+    /* 학생 문구 제거 */
+    body.is-prof-mode .prof-only-text {
+        display: block !important;
+    }
+    /* 교수님 문구 표시 */
+
+    /* 제목: "OOO" 뒤에 " 교수님께 도착한 편지"를 붙임 */
+    body.is-prof-mode #tree-main-title::after {
+        content: " 교수님께 도착한 편지";
+    }
+
+</style>
+</head>
+<body id="main-body">
+
+    <div class="lock-banner hidden" id="lock-banner">
+        <span class="lock-dot"></span>배포가 완료되었습니다 — 편지 작성이 마감되었어요
+    </div>
+    <div class="nav">
+        <div class="nav-logo" onclick="showPage('home')">CSE<span>//</span>Rollingpaper</div>
+        <div class="nav-main">
+            <button class="nb" id="nw" onclick="showPage('write-page')">편지 쓰기</button>
+            <button class="nb" id="nt" onclick="showPage('tree-page')">롤링페이퍼 보기</button>
+            <button class="nb nb-admin" id="na" onclick="showPage('admin-page')" title="관리자">⚙</button>
+        </div>
+    </div>
+
+    <!-- HOME -->
+    <div id="home" class="page">
+        <div class="grid-bg"></div>
+        <div class="badge"><span class="bdot"></span>컴퓨터공학과 롤링페이퍼 2026</div>
+        <h1 class="htitle">Algorithm Tree<br>Rolling Paper</h1>
+        <p class="htagline">스승의 날, 교수님께 감사한 마음을 전해보세요</p>
+        <p class="hsub">완성된 트리 모양의 롤링페이퍼를 확인해보세요 🌳<br>각 노드를 클릭하면 <em>소중한 편지</em>가 열립니다</p>
+        <div class="hcards">
+            <div class="hcard write" onclick="goWrite()">
+                <span class="ctag">[ write ]</span>
+                <div class="cico">✉️</div>
+                <div class="cttl">편지 작성하기</div>
+                <div class="cdsc">교수님을 선택하고<br>마음을 담아 편지를 보내세요</div>
+            </div>
+            <div class="hcard tree" onclick="showPage('tree-page')">
+                <span class="ctag">[ tree ]</span>
+                <div class="cico">🌳</div>
+                <div class="cttl">작성한 롤링페이퍼 보기</div>
+                <div class="cdsc">완성된 트리 모양의<br>롤링페이퍼를 확인해보세요</div>
+            </div>
+        </div>
+        <div class="hfoot">// 관리자에 의해 부적절한 내용의 편지는 삭제될 수 있습니다.</div>
+    </div>
+
+    <!-- WRITE -->
+    <div id="write-page" class="page">
+        <div class="winr">
+            <div class="locked-msg" id="locked-msg">
+                <div style="font-size:40px;margin-bottom:14px">🔒</div>
+                <div style="font-size:16px;font-weight:700;color:var(--a);margin-bottom:8px">편지 작성이 마감되었습니다</div>
+                <div style="font-size:11px;color:var(--mu);line-height:1.8">관리자가 배포를 완료하여<br>더 이상 편지를 작성할 수 없어요.</div>
+            </div>
+            <div class="sucscr" id="sucscr">
+                <div class="sucico">🎉</div>
+                <div class="sucttl">편지가 전달되었어요!</div>
+                <div class="sucsub">소중한 마음이 담긴 편지가<br>트리에 안전하게 저장되었습니다.<br><br><span style="color:var(--g)">// 다른 사람은 내 편지를 볼 수 없어요</span></div>
+                <button class="bkbtn" onclick="showPage('home')">← 홈으로</button>
+            </div>
+            <div id="wform">
+                <div class="thdr">
+                    <span class="td r"></span><span class="td y"></span><span class="td g"></span>
+                    <span class="ttl">rolling_paper.write() — 편지 작성</span>
+                </div>
+                <div class="tbody">
+                    <div class="pline"><span class="ps">$</span><span class="pt">rolling-paper --mode write --target professor</span></div>
+                    <div class="ssec">
+                        <div class="slbl">01 · 교수님 선택</div>
+                        <div class="pscroll" id="pgrid"></div>
+                    </div>
+                    <div class="ssec">
+                        <div class="slbl">02 · 작성자 정보</div>
+                        <div class="togrow">
+                            <div><div class="toglbl">익명으로 제출</div><div class="togsub">활성화 시 이름이 "익명"으로 표시</div></div>
+                            <button class="togsw" id="atog" onclick="toggleAnon()"></button>
+                        </div>
+                        <div class="frow" id="namerow">
+                            <label class="flbl">이름 / 학번</label>
+                            <input type="text" class="finp" id="sname" placeholder="ex) 홍길동 / 20231234">
+                        </div>
+                    </div>
+                    <div class="ssec">
+                        <div class="slbl">03 · 편지 내용</div>
+                        <div class="frow">
+                            <label class="flbl">메시지</label>
+                            <textarea class="finp" id="lbody" placeholder="교수님께 전하고 싶은 마음을 자유롭게 적어주세요 :)" oninput="updateChar()"></textarea>
+                            <div class="charc"><span id="cc">0</span> / 500</div>
+                        </div>
+                    </div>
+                    <button class="subbtn" onclick="submitLetter()">&gt; ./submit.sh ✓ 편지 보내기</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- 트리 페이지 영역 내부 -->
+    <div id="tree-page" class="page">
+        <div class="trhdr">
+            <div>
+                <div class="trttl" id="tree-main-title">Rolling Paper Tree</div>
+                <div class="trsub">// 노드를 클릭하면 편지가 열립니다</div>
+            </div>
+            <div class="trstat">
+                전체 편지 <em id="tcnt">0</em><br>
+                수신 교수 <em id="pcnt">0</em>
+            </div>
+        </div>
+        <div class="chips" id="chips"></div>
+
+        <!-- 핵심: canvas 대신 아래 div를 넣어야 합니다 -->
+        <div class="trwrap" id="trwrap"></div>
+    </div>
+
+        <!-- 이 캔버스 요소가 살아있어야 노드가 보입니다 -->
+        <canvas id="treeCanvas"></canvas>
+    </div> <!-- tree-page 끝 -->
+    <!-- ADMIN -->
+    <div id="admin-page" class="page">
+        <div class="alog" id="alog">
+            <div class="alock">🔐</div>
+            <h2>관리자(학생회만 접속)</h2>
+            <p>비밀번호를 입력하세요: </p>
+            <input type="password" class="pwinp" id="pwinp" placeholder="••••••" onkeydown="if(event.key==='Enter')checkPw()">
+            <button class="pwbtn" onclick="checkPw()">접근</button>
+            <div class="pwerr" id="pwerr">⚠ 관리자 모드는 학생회만 접속 가능합니다.</div>
+            <div style="font-size:8px;color:var(--mu);margin-top:12px">관리자 모드는 학생회에서만 접속합니다.</div>
+        </div>
+        <div class="adash" id="adash">
+            <div class="atop">
+                <div class="ah">// Admin Dashboard</div>
+                <div class="atop-right">
+                    <button class="qrbtn" onclick="openQR()">📲 QR 출력</button>
+                    <button class="deploy-btn" id="deploybtn" onclick="toggleDeploy()">🚀 배포 완료 처리</button>
+                    <button class="lobtn" onclick="adminLogout()">로그아웃</button>
+                </div>
+            </div>
+            <div class="astats">
+                <div class="sc"><div class="sn" id="stotal">0</div><div class="sl">전체 편지</div></div>
+                <div class="sc"><div class="sn" id="sanon">0</div><div class="sl">익명 편지</div></div>
+                <div class="sc"><div class="sn" id="sprofs">0</div><div class="sl">수신 교수님</div></div>
+            </div>
+            <div class="frow2" id="afilters"></div>
+            <div id="llist"></div>
+            <button style="width:100%;margin-top:10px;padding:9px;background:transparent;border:1px solid var(--bd);border-radius:7px;color:var(--mu);font-family:var(--mono);font-size:9px;cursor:pointer" onclick="exportData()">📦 JSON 내보내기</button>
+        </div>
+    </div>
+
+    <div class="overlay" id="ltoverlay" onclick="closeLetter(event)">
+        <div class="modal">
+            <button class="mcl" onclick="closeLetter()">×</button>
+            <div class="mmeta" id="mmeta"></div>
+            <div class="mfrom" id="mfrom"></div>
+            <div class="mbody" id="mbody"></div>
+            <div class="mdate" id="mdate"></div>
+        </div>
+    </div>
+
+    <div class="qroverlay" id="qroverlay" onclick="closeQR(event)">
+        <div class="qrmodal">
+            <div class="qrtop">
+                <div class="qrh">📲 교수님별 QR 코드</div>
+                <button class="qrcl" onclick="closeQR()">×</button>
+            </div>
+            <div style="font-size:9px;color:var(--mu);margin-bottom:14px;line-height:1.6">각 QR 코드를 종이 편지지에 인쇄하여 교수님께 전달하세요.<br>스캔하면 해당 교수님의 롤링페이퍼 트리로 바로 이동합니다.</div>
+            <div class="qr-grid" id="qrgrid"></div>
+            <button class="qr-printall" onclick="window.print()">🖨️ 전체 인쇄하기</button>
+        </div>
+    </div>
+
+    <div class="delconf" id="delconf">
+        <div class="delbox">
+            <div class="delico">🗑️</div>
+            <div class="delh">편지를 삭제할까요?</div>
+            <div class="delp" id="delp">이 편지를 삭제하면 복구할 수 없습니다.</div>
+            <div class="del-btns">
+                <button class="del-cancel" onclick="closeDelConf()">취소</button>
+                <button class="del-ok" onclick="confirmDel()">삭제하기</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script type="module">
+        /* ==========================================
+        1. Firebase 설정 및 초기화
+        ========================================== */
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+        apiKey: "AIzaSyBLCYh8r_VYdTfZ9dJYUYV2r7IHMgdhijE",
+        authDomain: "cse-prof-letter.firebaseapp.com",
+        projectId: "cse-prof-letter",
+        storageBucket: "cse-prof-letter.firebasestorage.app",
+        messagingSenderId: "482855445195",
+        appId: "1:482855445195:web:84f5be2d502f7b0293314e",
+        measurementId: "G-28VZL6FGSB"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        /* ==========================================
+        2. 기본 데이터 및 변수 설정 (기존 소스 유지)
+        ========================================== */
+        const PROFS=[
+        {id:'leemj',name:'이미정',subs:['컴프실','이산수학','C프실'],icon:'👩‍🏫'},
+        {id:'parkhs',name:'박현석',subs:['자프실Ⅰ'],icon:'👨‍💻'},
+        {id:'leems',name:'이민수',subs:['데이터베이스'],icon:'🗄️'},
+        {id:'banhk',name:'반효경',subs:['시스템SW및실습'],icon:'⚙️'},
+        {id:'kimyj',name:'김영준',subs:[],icon:'👨‍🔬'},
+        {id:'parkss',name:'박상수',subs:['컴프실','디논설','임베디드시스템및실험'],icon:'🔧'},
+        {id:'mindb',name:'민동보',subs:['오소프','자료구조'],icon:'📊'},
+        {id:'leehj',name:'이형준',subs:['컴퓨터구조'],icon:'🖥️'},
+        {id:'ohse',name:'오세은',subs:['컴퓨터알고리즘','오픈SW플랫폼'],icon:'🔐'},
+        {id:'yunmk',name:'윤명국',subs:['디논설','디논실','컴퓨터구조','임베디드시스템및실험'],icon:'💡'},
+        {id:'simjh',name:'심재형',subs:['인공지능'],icon:'🤖'},
+        {id:'ohyr',name:'오유란',subs:['4차산업혁명과창의융합SW','소융창'],icon:'🌐'},
+        {id:'hwangew',name:'황의원',subs:['자프실Ⅰ','파프실','인공지능','C프실'],icon:'⚡'},
+        {id:'kimsm',name:'김수민',subs:['소융창'],icon:'🎓'},
+        {id:'hajy',name:'하진용',subs:['데이터베이스'],icon:'💾'},
+        ];
+
+        const ADMIN_PW='commit2026!', STORE_KEY='cs_rolling_v3', LOCK_KEY='cs_rolling_locked';
+        let letters = []; // 이제 Firebase에서 받아옵니다
+        let isLocked = localStorage.getItem(LOCK_KEY)==='true';
+        let adminIn=false, curFilter='all', treeFilter='all', isAnon=false, selProf=null, delTarget=null;
+
+        /* ==========================================
+        3. Firebase 실시간 데이터 연동 (핵심)
+        ========================================== */
+        const q = query(collection(db, "letters"), orderBy("timestamp", "desc"));
+        onSnapshot(q, (snapshot) => {
+        letters = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+        }));
+        renderTree(); // 데이터 변경 시 트리 다시 그리기
+        if(adminIn) renderAdminDash(); // 관리자 화면 업데이트[cite: 1]
+        });
+
+        /* ==========================================
+        4. 함수 정의 (Firebase 전용으로 수정)
+        ========================================== */
+        window.submitLetter = async function() {
+        if(isLocked){alert('배포가 완료되어 편지 작성이 마감되었습니다.');return;}
+        if(!selProf){alert('교수님을 선택해주세요!');return;}
+        const body=document.getElementById('lbody').value.trim();
+        if(!body){alert('편지 내용을 입력해주세요!');return;}
+        const name=isAnon?'익명':(document.getElementById('sname').value.trim()||'익명');
+        const prof=PROFS.find(p=>p.id===selProf);
+
+        try {
+        // Firestore에 저장[cite: 1]
+        await addDoc(collection(db, "letters"), {
+        profId: selProf,
+        profName: prof.name,
+        sender: name,
+        body: body,
+        isAnon: isAnon,
+        timestamp: serverTimestamp(),
+        date: new Date().toLocaleDateString('ko-KR',{year:'numeric',month:'long',day:'numeric'})
+        });
+        document.getElementById('wform').style.display='none';
+        document.getElementById('sucscr').classList.add('show');
+        } catch (e) {
+        alert("오류 발생: " + e.message);
+        }
+        };
+
+        /* ==========================================
+        5. 기존 UI 제어 함수들 (기존 소스 유지)[cite: 1]
+        ========================================== */
+        window.init = function(){renderProfGrid();updateLockUI();showPage('home');}
+        window.updateLockUI = function(){
+        document.getElementById('lock-banner').classList.toggle('hidden',!isLocked);
+        const db_btn=document.getElementById('deploybtn');
+        if(db_btn){db_btn.textContent=isLocked?'🔓 배포 잠금 해제':'🚀 배포 완료 처리';db_btn.classList.toggle('locked',isLocked);}
+        }
+
+        window.showPage = function(id){
+        document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+        document.querySelectorAll('.nb').forEach(b=>b.classList.remove('on'));
+        document.getElementById(id).classList.add('active');
+        const nm={'write-page':'nw','tree-page':'nt','admin-page':'na'};
+        if(nm[id])document.getElementById(nm[id]).classList.add('on');
+        if(id==='tree-page') renderTree();
+        if(id==='admin-page') renderAdmin();
+        if(id==='write-page'){
+        document.getElementById('sucscr').classList.remove('show');
+        document.getElementById('locked-msg').classList.remove('show');
+        document.getElementById('wform').style.display=isLocked?'none':'block';
+        if(isLocked)document.getElementById('locked-msg').classList.add('show');
+        resetForm();
+        }
+        }
+
+        window.goWrite = function(){if(isLocked){alert('마감되었습니다.');return;}showPage('write-page');}
+
+        window.renderProfGrid = function(){
+        document.getElementById('pgrid').innerHTML=PROFS.map(p=>`
+        <button class="pbtn" onclick="selP('${p.id}')" id="pb-${p.id}">
+        <span class="pico">${p.icon}</span>
+        <div><div class="pnm">${p.name} 교수님</div><div class="psubs">${p.subs.length?p.subs.join(' · '):'—'}</div></div>
+        </button>`).join('');
+        }
+
+        window.selP = function(id){selProf=id;document.querySelectorAll('.pbtn').forEach(b=>b.classList.remove('sel'));document.getElementById('pb-'+id).classList.add('sel');}
+        window.toggleAnon = function(){isAnon=!isAnon;document.getElementById('atog').classList.toggle('on',isAnon);const nr=document.getElementById('namerow');nr.style.opacity=isAnon?'.3':'';nr.style.pointerEvents=isAnon?'none':'';}
+        window.updateChar = function(){document.getElementById('cc').textContent=document.getElementById('lbody').value.length;}
+        window.resetForm = function(){selProf=null;isAnon=false;document.querySelectorAll('.pbtn').forEach(b=>b.classList.remove('sel'));document.getElementById('atog').classList.remove('on');document.getElementById('namerow').style.opacity='';document.getElementById('namerow').style.pointerEvents='';document.getElementById('sname').value='';document.getElementById('lbody').value='';document.getElementById('cc').textContent='0';}
+        const NODE_EMOJIS = ['⭐', '🎈', '🍀', '🎁', '💌', '🌸', '🌈', '🍭', '🎀', '💎', '🔥', '✨', '🌙', '🍃', '🧸'];
+        const COLS=['#39ff8f','#00cfff','#9d7fff','#ffbb00','#ff7eb3','#00e5c8','#ff7f50','#a8ff3e','#7b89ff','#ff9f43','#42f5e9','#f7b731','#fc5c65','#45aaf2','#26de81'];
+        window.renderTree = function(){
+        const wrap = document.getElementById('trwrap');
+        if(!wrap) return;
+
+        // 1. 특정 교수님 전용 모드인지 확인
+        const isSpecificProf = treeFilter !== 'all';
+
+        // 2. 필터링된 편지 목록 결정[cite: 1]
+        const filtered = isSpecificProf ? letters.filter(l => l.profId === treeFilter) : letters;
+
+        // 3. 상단 통계 수치 업데이트[cite: 1]
+        document.getElementById('tcnt').textContent = filtered.length;
+        const ps = new Set(filtered.map(l => l.profId));
+        document.getElementById('pcnt').textContent = ps.size;
+
+        // 4. 상단 교수님 선택 칩(Chips) 제어[cite: 1]
+        const cd = document.getElementById('chips');
+        if (isSpecificProf) {
+        // 교수님 전용 링크로 접속 시 다른 교수님 목록(칩)을 아예 숨김[cite: 1]
+        cd.style.display = 'none';
+        // 헤더 타이틀을 해당 교수님 성함으로 변경 (선택 사항)
+        const headerTitle = document.querySelector('.tree-header h2');
+        if(headerTitle) headerTitle.textContent = `${PROFS.find(p=>p.id===treeFilter)?.name || ''} 교수님 롤링페이퍼`;
+        } else {
+        cd.style.display = 'flex';
+        const ap = PROFS.filter(p => letters.some(l => l.profId === p.id));
+        cd.innerHTML = `<button class="chip ${treeFilter==='all'?'on':''}" onclick="setTF('all')">전체</button>` +
+        ap.map(p => `<button class="chip ${treeFilter===p.id?'on':''}" onclick="setTF('${p.id}')">${p.name}</button>`).join('');
+        }
+
+        // 5. 편지가 없을 경우 처리[cite: 1]
+        if(!filtered.length){
+        wrap.innerHTML = `<div style="text-align:center;padding:40px;color:var(--mu);font-size:10px">아직 편지가 없어요</div>`;
+        return;
+        }
+
+        // 6. 트리 노드 구성을 위한 데이터 매핑[cite: 1]
+        const pm = {};
+        PROFS.forEach(p => { pm[p.id] = { ...p, ltrs: [] }; });
+        filtered.forEach(l => { if (pm[l.profId]) pm[l.profId].ltrs.push(l); });
+
+        // 7. 화면에 그릴 교수님 노드 결정 (전용 모드면 본인만, 아니면 편지 있는 교수님 전체)[cite: 1]
+        const activeP = isSpecificProf ? PROFS.filter(p => p.id === treeFilter) : PROFS.filter(p => pm[p.id].ltrs.length > 0);
+
+        // 8. 레이아웃 상수 및 좌표 계산 (기존 로직 유지)[cite: 1]
+        const PR=28, LR=25, LX_GAP=58, LY_GAP=78, LPR=3, PROF_Y=60, NAME_H=18, LETTER_START_Y=PROF_Y+PR+NAME_H+42;
+        const colW = activeP.map(p => {
+        const c = Math.min(pm[p.id].ltrs.length, LPR);
+        return Math.max(110, c * LX_GAP + 24);
+        });
+        const totalW = colW.reduce((a, b) => a + b, 0) + (activeP.length - 1) * 16 + 48;
+        const SW = Math.max(600, totalW);
+        let profXs = [], cx = 24; colW.forEach(w => { profXs.push(cx + w/2); cx += w + 16; });
+
+        const rootX = SW/2, rootY = 28;
+        let nodes = [], edges = [], maxY = PROF_Y + PR + NAME_H + 8;
+
+        // ROOT 노드 추가[cite: 1]
+        nodes.push({ t: 'root', x: rootX, y: rootY });
+
+        activeP.forEach((prof, pi) => {
+        const px = profXs[pi], col = COLS[pi % COLS.length];
+        // 교수 노드[cite: 1]
+        nodes.push({ t: 'prof', id: prof.id, x: px, y: PROF_Y, r: PR, icon: prof.icon, name: prof.name, col });
+        edges.push({ x1: rootX, y1: rootY + 14, x2: px, y2: PROF_Y - PR, col: col + '55', dash: '4 4' });
+
+        pm[prof.id].ltrs.forEach((lt, li) => {
+        const row = Math.floor(li / LPR), col2 = li % LPR;
+        const ri = Math.min(LPR, pm[prof.id].ltrs.length - row * LPR);
+        const rw = (ri - 1) * LX_GAP;
+        const lx = px - rw/2 + col2 * LX_GAP, ly = LETTER_START_Y + row * LY_GAP;
+        maxY = Math.max(maxY, ly + LR + 8);
+        const lc = COLS[(pi * 4 + li) % COLS.length];
+        const fromY = row === 0 ? (PROF_Y + PR + NAME_H + 4) : (LETTER_START_Y + (row - 1) * LY_GAP + LR);
+        const fromX = row === 0 ? px : lx;
+
+        // 편지 노드[cite: 1]
+        // 랜덤 이모지 선택 (ID를 기반으로 선택하면 새로고침해도 같은 이모지가 유지됩니다)
+        const emojiIndex = lt.id.charCodeAt(0) % NODE_EMOJIS.length;
+        const randomEmoji = NODE_EMOJIS[emojiIndex];
+
+        nodes.push({ 
+            t: 'letter', 
+            id: lt.id, 
+            x: lx, 
+            y: ly, 
+            r: LR, 
+            col: lc, 
+            init: randomEmoji // 글자 대신 이모지 삽입
+        });
+        edges.push({ x1: fromX, y1: fromY, x2: lx, y2: ly - LR, col: lc + '44', dash: '3 4' });
+        });
+        });
+
+        maxY += 32;
+
+        // 9. SVG 생성 및 렌더링 (기존 로직 유지)[cite: 1]
+        const ESvg = edges.map(e => `<line x1="${e.x1}" y1="${e.y1}" x2="${e.x2}" y2="${e.y2}" stroke="${e.col}" stroke-width="1" stroke-dasharray="${e.dash}" opacity=".8"/>`).join('');
+        const NSvg = nodes.map(n => {
+        if (n.t === 'root') return `<g><circle cx="${n.x}" cy="${n.y}" r="14" fill="#0a1428" stroke="#39ff8f" stroke-width="1.5"/><text x="${n.x}" y="${n.y}" text-anchor="middle" dominant-baseline="central" fill="#39ff8f" font-size="7" font-weight="700">ROOT</text></g>`;
+        // renderTree 함수 내부의 n.t === 'prof'인 부분을 찾으세요
+        if (n.t === 'prof') return `
+            <g style="cursor:pointer" onclick="showProfInfo('${n.id}')">
+                <circle cx="${n.x}" cy="${n.y}" r="${n.r}" fill="#0c1020" stroke="${n.col}" stroke-width="1.8"/>
+                <text x="${n.x}" y="${n.y}" text-anchor="middle" dominant-baseline="central" font-size="16">${n.icon}</text>
+        
+                <!-- 성함 뒤에 &nbsp; 또는 공백 한 칸을 넣었습니다 -->
+                <text x="${n.x}" y="${n.y + n.r + 13}" text-anchor="middle" dominant-baseline="central" fill="${n.col}" font-size="10" font-weight="700">
+                    ${n.name} 교수님
+                </text>
+            </g>`;
+        return `<g style="cursor:pointer" onclick="openLetter('${n.id}')"><circle cx="${n.x}" cy="${n.y}" r="${n.r}" fill="#07090f" stroke="${n.col}" stroke-width="1.3"/><text x="${n.x}" y="${n.y}" text-anchor="middle" dominant-baseline="central" fill="${n.col}" font-size="18" font-weight="700">${n.init}</text></g>`;
+        }).join('');
+
+        wrap.innerHTML = `<svg width="${SW}" viewBox="0 0 ${SW} ${maxY}" style="display:block;min-width:${SW}px;overflow:visible">${ESvg}${NSvg}</svg>`;
+        }
+
+        window.setTF = function(id){treeFilter=id;renderTree();}
+        window.showProfInfo = function(id){const p=PROFS.find(x=>x.id===id);const cnt=letters.filter(l=>l.profId===id).length;openModal(`// Node: ${p.name} 교수님`,`${p.icon} ${p.name} 교수님`,`담당 과목: ${p.subs.join(', ')}\n연결된 편지: ${cnt}개`,'');}
+        window.openLetter = function(id){const lt=letters.find(l=>l.id===id);if(!lt)return;openModal(`To. ${lt.profName} 교수님`,`From. ${lt.sender}`,lt.body,lt.date);}
+        window.openModal = function(meta,from,body,date){document.getElementById('mmeta').textContent=meta;document.getElementById('mfrom').innerHTML=`<strong>${from}</strong>`;document.getElementById('mbody').textContent=body;document.getElementById('mdate').textContent=date?`// 작성일: ${date}`:'';document.getElementById('ltoverlay').classList.add('show');}
+        window.closeLetter = function(e){if(!e||e.target===document.getElementById('ltoverlay'))document.getElementById('ltoverlay').classList.remove('show');}
+
+        window.checkPw = function(){if(document.getElementById('pwinp').value===ADMIN_PW){adminIn=true;document.getElementById('alog').style.display='none';document.getElementById('adash').style.display='block';renderAdminDash();}else{document.getElementById('pwerr').style.display='block';}}
+        window.adminLogout = function(){adminIn=false;document.getElementById('alog').style.display='';document.getElementById('adash').style.display='none';}
+        window.renderAdmin = function(){if(adminIn) renderAdminDash();}
+        window.toggleDeploy = function(){isLocked=!isLocked;localStorage.setItem(LOCK_KEY,isLocked);updateLockUI();renderAdminDash();}
+
+        window.renderAdminDash = function(){
+        document.getElementById('stotal').textContent=letters.length;
+        document.getElementById('sanon').textContent=letters.filter(l=>l.isAnon).length;
+        document.getElementById('sprofs').textContent=new Set(letters.map(l=>l.profId)).size;
+        const fd=document.getElementById('afilters');
+        fd.innerHTML=`<button class="fb ${curFilter==='all'?'on':''}" onclick="setAF('all')">전체</button>`+PROFS.filter(p=>letters.some(l=>l.profId===p.id)).map(p=>`<button class="fb ${curFilter===p.id?'on':''}" onclick="setAF('${p.id}')">${p.name}</button>`).join('');
+        const fl=curFilter==='all'?letters:letters.filter(l=>l.profId===curFilter);
+        document.getElementById('llist').innerHTML=fl.map(lt=>`
+            <div class="lc">
+                <div class="lcp">To. ${lt.profName}</div>
+                <div class="lcf">From. ${lt.sender}</div>
+                <div class="lcprev">${lt.body.substring(0,30)}...</div>
+                <!-- 아래 삭제 버튼을 추가하세요 -->
+                <button class="admin-del-btn" onclick="openDelConf('${lt.id}')">🗑️ 삭제</button>
+            </div>`).join('');
+        }
+        window.setAF = function(id){curFilter=id;renderAdminDash();}
+
+        window.openQR = function(){
+        const grid=document.getElementById('qrgrid'); const baseUrl=window.location.href.split('?')[0];
+        grid.innerHTML=PROFS.filter(p=>letters.some(l=>l.profId===p.id)).map(p=>`<div class="qr-card"><div>${p.name}</div><div id="qrimg-${p.id}"></div></div>`).join('');
+        document.getElementById('qroverlay').classList.add('show');
+        setTimeout(()=>{ PROFS.forEach(p=>{ const c=document.getElementById('qrimg-'+p.id); if(c) new QRCode(c,{text:baseUrl+'?prof='+p.id,width:100,height:100}); }); },300);
+        }
+        window.closeQR = function(e){if(!e||e.target===document.getElementById('qroverlay'))document.getElementById('qroverlay').classList.remove('show');}
+
+        // 초기화 실행
+        // 파일의 가장 마지막 부분
+        init();
+
+        const params = new URLSearchParams(window.location.search);
+        const pParam = params.get('prof');
+
+        if (pParam) {
+            treeFilter = pParam; // 필터 적용
+            const nav = document.querySelector('.nav-bar');
+            if (nav) nav.style.display = 'none'; // 메뉴바 숨김
+            showPage('tree-page'); // 트리 페이지로 이동
+        }
+        let pendingDeleteId = null;
+
+        window.openDelConf = function(id) {
+            pendingDeleteId = id; 
+            const modal = document.getElementById('delconf');
+            if (modal) modal.classList.add('show');
+        };
+
+        window.closeDelConf = function() {
+            pendingDeleteId = null;
+            const modal = document.getElementById('delconf');
+            if (modal) modal.classList.remove('show');
+        };
+
+        window.confirmDel = async function() {
+            if (!pendingDeleteId) return;
+            try {
+                const { deleteDoc, doc } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
+                await deleteDoc(doc(db, "letters", pendingDeleteId));
+                alert("편지가 삭제되었습니다.");
+                closeDelConf();
+            } catch (error) {
+                console.error("삭제 실패:", error);
+                alert("삭제 중 오류가 발생했습니다.");
+            }
+        };
+
+    </script>
