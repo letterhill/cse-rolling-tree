@@ -2,6 +2,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta charset="UTF-8">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,300;0,400;0,600;0,700;1,400&family=Nanum+Myeongjo:wght@400;700&display=swap');
@@ -246,6 +247,23 @@ textarea.finp{min-height:100px;resize:vertical;line-height:1.6}
 
 @keyframes blk{0%,100%{opacity:1}50%{opacity:.2}}
 @keyframes pop{0%{transform:scale(0)}60%{transform:scale(1.1)}100%{transform:scale(1)}}
+    /* 트리를 감싸는 컨테이너 설정 */
+    #trwrap {
+        width: 100%;
+        overflow-x: auto; /* 가로 스크롤 허용 */
+        overflow-y: hidden;
+        -webkit-overflow-scrolling: touch; /* 아이폰에서 부드러운 스크롤 */
+        padding: 20px 0;
+        display: flex;
+        justify-content: flex-start; /* 왼쪽부터 정렬 */
+    }
+
+    /* SVG 자체의 최소 너비 확보 */
+    svg {
+        display: block;
+        margin: 0 auto;
+        min-width: 600px; /* 트리 전체가 보일 수 있는 최소 너비 유지 */
+    }
 
     /* 교수님 모드 전용 스타일 */
     .prof-only-text {
